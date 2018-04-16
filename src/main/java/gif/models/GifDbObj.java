@@ -1,6 +1,6 @@
 package gif.models;
 
-public class Database {
+public class GifDbObj {
 
     String weburl;
     double duration;

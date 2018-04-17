@@ -1,11 +1,16 @@
 package gif.controllers;
 
+import gif.exceptions.AuthenticationException;
+import gif.exceptions.GeneralException;
 import gif.models.GifRoot;
+import gif.models.User;
 import gif.services.GifService;
+import gif.services.SecurityService;
+import gif.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.NoSuchAlgorithmException;
 
 /*
 Todo:
@@ -20,23 +25,48 @@ Todo:
 @RequestMapping("/gif")
 public class GifController {
 
-@Autowired
+    @Autowired
     GifService gifService;
 
-    @RequestMapping("/all")
-    public GifRoot allGifs(){
+    @Autowired
+    SecurityService securityService;
 
-      GifRoot object = gifService.mapGifs();
-      return object;
+    @Autowired
+    UserService userService;
+
+    @RequestMapping("/all")
+    public GifRoot allGifs(@RequestParam("api-key") String apiKey)throws AuthenticationException {
+
+        if (securityService.authenticateApiKey(apiKey)){
+            GifRoot object = gifService.mapGifs();
+            return object;
+        }
+
+        else
+            throw new AuthenticationException("Invalid API Key.");
+
+
     }
 
     @RequestMapping("/search")
-    public GifRoot searchGifs(@RequestParam(value = "query", defaultValue = "")String query){
+    public GifRoot searchGifs(@RequestParam(value = "query", defaultValue = "")String query,
+                              @RequestParam("api-key") String apiKey)throws AuthenticationException{
 
+        if (securityService.authenticateApiKey(apiKey)){
+            GifRoot object2 = gifService.searchGifs(query);
 
-        GifRoot object2 = gifService.searchGifs(query);
+            return object2;
+        }
 
-        return object2;
+        else
+            throw new AuthenticationException("Invalid API Key.");
+
+    }
+
+    @PostMapping("/")
+    public User createUser(@RequestBody User user) throws GeneralException, NoSuchAlgorithmException {
+
+        return userService.createUser(user);
     }
 
 }
